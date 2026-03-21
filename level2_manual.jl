@@ -10,54 +10,80 @@
 
 # Что происходит с глобальной константой PI, о чем предупреждает интерпретатор?
 const PI = 3.14159
-PI = 3.14
+PI = 3.14   # Интерпретатор предупредит об изменении константы, этого делать не рекомендуется
 
 # Что происходит с типами глобальных переменных ниже, какого типа `c` и почему?
 a = 1
 b = 2.0
-c = a + b
+c = a + b   # c будет иметь тип float , так как смешивается дробное и целое число (сохраняется точность)
 
 # Что теперь произошло с переменной а? Как происходит биндинг имен в Julia?
-a = "foo"
+a = "foo" # константа a теперь имеет тип str, она перепривезалась , старое значение теперь мусор
 
 # Что происходит с глобальной переменной g и почему? Чем ограничен биндинг имен в Julia?
 g::Int = 1
-g = "hi"
+g = "hi" # произойдет ошибка так как тип глобальной переменной должен быть совместим
 
 function greet()
-    g = "hello"
-    println(g)
+    g = "hello" # это локальная переменная
+    println(g) # выведет hello
 end
 greet()
 
 # Чем отличаются присвоение значений новому имени - и мутация значений?
-v = [1,2,3]
+v = [1, 2, 3]
 z = v
-v[1] = 3
-v = "hello"
-z
+v[1] = 3 # мутация которую видит и z и v
+v = "hello" # значение переприсвоилось на строку
+z # осталось измененным массивом. ОТличие в том что присвоение значения получает только z, а при мутации и z и v
 
 # Написать тип, параметризованный другим типом
-
+struct Box{T}
+    content::T
+end
 #=
 Написать функцию для двух аругментов, не указывая их тип,
 и вторую функцию от двух аргментов с конкретными типами,
 дать пример запуска
 =#
+function add(x, y)
+    return x + y
+end
+function add_specific(x::Int64, y::Int64)
+    return x + y
+end
 
 #=
 Абстрактный тип - ключевое слово?
 Примитивный тип - ключевое слово?
-Композитный тип - ключевое слово?
+Композитный тип - ключевое слово? 
 =#
-
+abstract type
+primitive type
+struct
 #=
 Написать один абстрактный тип и два его подтипа (1 и 2)
 Написать функцию над абстрактным типом, и функцию над её подтипом-1
 Выполнить функции над объектами подтипов 1 и 2 и объяснить результат
 (функция выводит произвольный текст в консоль)
 =#
-
+abstract type Animal end
+struct Dog <: Animal
+    name::String
+end
+struct Cat <: Animal
+    name::String
+end
+function food(animal::Animal)
+    println("Они едят Всё что угодно")
+end
+function food(dog::Dog)
+    println("$(dog.name) eats: meat")
+end
+rex = Dog("Rex")
+barbos = Cat("Barbos")
+food(rex)
+food(barbos)
 
 #===========================================================================================
 2. Функции:
@@ -68,20 +94,49 @@ z
 =#
 
 # Пример обычной функции
+function add(x, y)
+    return x + y
+end
 
 # Пример лямбда-функции (аннонимной функции)
-
+cube = function(x)
+    return x^3
+end
+println(cube(3)) 
 # Пример функции с переменным количеством аргументов
-
+function sum_all(numbers...)
+    total = 0
+    for n in numbers
+        total += n
+    end
+    return total
+end
+println(sum_all(11, 25))
 # Пример функции с именованными аргументами
-
+function user(; name="Гость", age=21, city="Москва")
+    println("Пользователь: $name, $age год, город: $city")
+end
+user(city="СПб", name="Мария")
 # Функции с переменным кол-вом именованных аргументов
+function info(; kwargs...)
+    println("Получено $(length(kwargs)) именованных аргументов:")
+    for (key, value) in kwargs
+        println("  $key = $value")
+    end
+end
 
+info(name="Анна", age=25, city="Москва")
 #=
 Передать кортеж в функцию, которая принимает на вход несколько аргументов.
 Присвоить кортеж результату функции, которая возвращает несколько аргументов.
 Использовать splatting - деструктуризацию кортежа в набор аргументов.
 =#
+function process(a, b, c)
+    sum = a + b + c
+    proizv = a * b * c
+    average = sum / 3
+    return sum, proizv, average  
+end
 
 
 #===========================================================================================
@@ -93,6 +148,12 @@ z
 - через loop fusion и
 - с помощью reduce
 =#
+arr = [2, 3, 4, 5]
+result = reduce(*, arr)
+println(result)
+
+arr = [2, 3, 4, 5]
+result = prod(arr)
 
 #=
 Написать функцию от одного аргумента и запустить ее по всем элементам массива
@@ -101,11 +162,27 @@ c помощью map
 c помощью list comprehension
 указать, чем это лучше явного цикла?
 =#
-
+arr = [1, 2, 3, 4, 5]
+function square(x)
+    return x^2
+end
+resultbroadcast = square.(arr)
+resultmap = map(square, arr)
+resultcomprehension = [square(x) for x in arr]
+println("Broadcast: $resultbroadcast")
+println("Map: $resultmap")
+println("List comprehension: $resultcomprehension")
+# короче и производительнее
 # Перемножить вектор-строку [1 2 3] на вектор-столбец [10,20,30] и объяснить результат
-
-
+vectorstr = [1 2 3]
+vectorstolb = [10,20,30]
+result = vectorstr * vectorstolb
+println("Результат: $result")
+# умножение матриц 1 на 3 и 3 на 1. Получаем 1 на 1
 # В одну строку выбрать из массива [1, -2, 2, 3, 4, -5, 0] только четные и положительные числа
+arr = [1, -2, 2, 3, 4, -5, 0]
+result = [x for x in arr if x > 0 && x % 2 == 0]
+println(result)
 
 
 # Объяснить следующий код обработки массива names - что за number мы в итоге определили?
@@ -129,7 +206,13 @@ number = findfirst(n -> !(n in numbers_sorted), 0:9)
 написать свой тип ленивого массива, каждый элемент которого
 вычисляется при взятии индекса (getindex) по формуле (index - 1)^2
 =#
-
+struct LazyArray
+end
+function Base.getindex(arr::LazyArray, i::Int)
+    return (i - 1)^2
+end
+lazy = LazyArray()
+println(lazy[4])
 #=
 Написать два типа объектов команд, унаследованных от AbstractCommand,
 которые применяются к массиву:
@@ -149,7 +232,33 @@ apply!(cmd::AbstractCommand, target::Vector) = error("Not implemented for type $
 =#
 
 # Написать тест для функции
+# Функция для тестирования
+function add(a, b)
+    return a + b
+end
 
+function test_add()
+    println("Тестируем add...")
+    
+    if add(2, 3) == 5
+        println("  add(2, 3) = 5")
+    else
+        println("  add(2, 3) = $(add(2, 3)), ожидалось 5")
+    end
+    
+    if add(-1, 1) == 0
+        println("  add(-1, 1) = 0")
+    else
+        println("  add(-1, 1) = $(add(-1, 1)), ожидалось 0")
+    end
+    
+    if add(0, 0) == 0
+        println("  add(0, 0) = 0")
+        println("  add(0, 0) = $(add(0, 0)), ожидалось 0")
+    end
+end
+
+test_add()
 
 #===========================================================================================
 6. Дебаг: как отладить функцию по шагам?
@@ -158,28 +267,43 @@ apply!(cmd::AbstractCommand, target::Vector) = error("Not implemented for type $
 #=
 Отладить функцию по шагам с помощью макроса @enter и точек останова
 =#
+function calculate(x, y)
+    a = x + y
+    b = x * y
+    c = a^2 - b
+    return c
+end
+@enter calculate(3, 4)
+
 
 
 #===========================================================================================
 7. Профилировщик: как оценить производительность функции?
 =#
-
+function slowfunction(n)
+    result = 0
+    for i in 1:n
+        result += i^2
+    end
+    return result
+end
+@time slowfunction(100_000)
 #=
 Оценить производительность функции с помощью макроса @profview,
 и добавить в этот репозиторий файл со скриншотом flamechart'а
 =#
+using ProfileView
 function generate_data(len)
     vec1 = Any[]
     for k = 1:len
-        r = randn(1,1)
+        r = randn(1, 1)
         append!(vec1, r)
     end
     vec2 = sort(vec1)
     vec3 = vec2 .^ 3 .- (sum(vec2) / len)
     return vec3
 end
-
-@time generate_data(1_000_000);
+ProfileView.@profview generate_data(100_000)
 
 
 # Переписать функцию выше так, чтобы она выполнялась быстрее:
@@ -188,29 +312,67 @@ end
 #===========================================================================================
 8. Отличия от матлаба: приращение массива и предварительная аллокация?
 =#
+push!(vec, x) # работает быстро, а vec = [vec, x] медленно
 
 #=
 Написать функцию определения первой разности, которая принимает и возвращает массив
 и для каждой точки входного (x) и выходного (y) выходного массива вычисляет:
 y[i] = x[i] - x[i-1]
 =#
+function diff_loop(x)
+    n = length(x)
+    y = Vector{eltype(x)}(undef, n-1)
+    for i in 2:n
+        y[i-1] = x[i] - x[i-1]
+    end
+    return y
+end
 
 #=
 Аналогичная функция, которая отличается тем, что внутри себя не аллоцирует новый массив y,
 а принимает его первым аргументом, сам массив аллоцируется до вызова функции
 =#
-
+function first_difference!(y, x)
+    n = length(x)
+    for i in 2:n
+        y[i-1] = x[i] - x[i-1]
+    end
+    return y
+end
 #=
 Написать код, который добавляет элементы в конец массива, в начало массива,
 в середину массива
 =#
-
+arr = [1, 2, 3, 4, 5]
+push!(arr, 6)
+println("push! в конец: $arr") # в конец
+arr = [2, 3, 4, 5]
+pushfirst!(arr, 1)
+println("pushfirst! в начало: $arr") # в начало
+arr = [1, 2, 4, 5]
+insert!(arr, 3, 3)  
+println("insert! в середину: $arr")  # вставили на конкретную позицию
 
 #===========================================================================================
 9. Модули и функции: как оборачивать функции внутрь модуля, как их экспортировать
 и пользоваться вне модуля?
 =#
+module MyModule
 
+function add(a, b)
+    return a + b
+end
+
+function subtract(a, b)
+    return a - b
+end
+end 
+
+using .MyModule  
+
+println(add(3, 4))  # 7 функция доступна напрямую(экспортированная)
+
+println(MyModule.subtract(10, 3)) # 7 не экспортированная 
 
 #=
 Написать модуль с двумя функциями,
@@ -218,10 +380,20 @@ y[i] = x[i] - x[i-1]
 воспользоваться обеими функциями вне модуля
 =#
 module Foo
-    #export ?
+export add
+
+function add(a, b)
+    return a + b
 end
-# using .Foo ?
-# import .Foo ?
+
+function subtract(a, b)
+    return a - b
+end
+#export ?
+end
+using .Foo 
+println("add(3, 4) = $(add(3, 4))")
+println("subtract(10, 3) = $(Foo.subtract(10, 3))")
 
 
 #===========================================================================================
@@ -229,9 +401,12 @@ end
 =#
 
 # Что такое environment, как задать его, как его поменять во время работы?
-
+# набор пакетов и их версий
 # Что такое пакет (package), как добавить новый пакет?
-
+# по сути это просто библиотека 
+using Pkg 
+Pkg.add("JSON")
+using JSON
 # Как начать разрабатывать чужой пакет?
 
 #=
@@ -244,7 +419,10 @@ end
 11. Сохранение переменных в файл и чтение из файла.
 Подключить пакеты JLD2, CSV.
 =#
+using Pkg
+Pkg.add(["JLD2", "CSV", "DataFrames"])
 
+using JLD2, CSV, DataFrames
 # Сохранить и загрузить произвольные обхекты в JLD2, сравнить их
 
 # Сохранить и загрузить табличные объекты (массивы) в CSV, сравнить их
@@ -253,11 +431,19 @@ end
 #===========================================================================================
 12. Аргументы запуска Julia
 =#
+julia
 
+julia script.jl # Запуск с файлом
+
+julia -e 'println("Hello")'# Запуск с выражением
+
+julia --project=.# Запуск с проектом
 #=
 Как задать окружение при запуске?
 =#
+julia --project=.
 
+julia --project=/path/to/project # Активировать окружение в конкретной папке
 #=
 Как задать скрипт, который будет выполняться при запуске:
 а) из файла .jl
